@@ -1,0 +1,75 @@
+module FIFO_2clk(clk_r,clk_w,rst,in,out,wr,rd,empty,full,fifo_counter);
+input rst,clk_r,clk_w,wr,rd;
+input [7:0]in;
+output reg [7:0]out;
+output reg full,empty;
+output reg [7:0]fifo_counter;
+
+reg [7:0] rd_ptr,wr_ptr;
+reg [7:0]mem;
+
+always@(fifo_counter)begin
+  empty=(fifo_counter==0);
+  full=(fifo_counter==64);
+end
+
+always@(posedge clk_w or posedge rst)begin
+  if(rst)
+    fifo_counter<=0;
+  else if(!full&&wr)
+    fifo_counter<=fifo_counter+1;
+  else
+    fifo_counter<=fifo_counter;
+  end
+  
+always@(posedge clk_r or posedge rst)begin
+   if(!empty&&rd)
+    fifo_counter<=fifo_counter-1;
+   else
+    fifo_counter<=fifo_counter;
+  end
+        
+  
+  always@(posedge clk_r or posedge rst)begin
+    if(rst)
+      out<=0;
+    else begin
+        if(rd&&!empty)
+              out<=mem[rd_ptr];
+        else
+              out<=out;
+    end
+  end
+  
+always@(posedge clk_w)begin
+  if(wr&&!full)
+    mem[wr_ptr]<=mem;
+  else
+    mem[wr_ptr]<=mem[wr_ptr];
+end
+
+always@(posedge clk_r or posedge rst)begin
+  if(rst)begin
+    rd_ptr<=0;
+  end
+else begin
+  if(!empty&&rd)
+    rd_ptr<=rd_ptr+1;
+  else
+    rd_ptr<=rd_ptr;
+  end
+end
+
+always@(posedge clk_w or posedge rst)begin
+  if(rst)begin
+    wr_ptr<=0;
+  end
+else begin
+  if(!full&&wr)
+    wr_ptr<=wr_ptr+1;
+  else
+    wr_ptr<=wr_ptr;
+
+  end
+end
+endmodule 
